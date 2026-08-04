@@ -1,4 +1,6 @@
 
+import { userModel } from "../models/userModel.js"
+import { signupValidate } from "../validator/userValidator.js"
 
 export const getHome = (req, res) => {
    res.send("Homepage!")
@@ -10,18 +12,38 @@ export const getAbout = (req, res) => {
 }
 
 
-export const postUser = () => {
+export const postUser = async (req, res) => {
    const {username, email, password} = req.body
 
-   console.log(username, email, password)
+   const {error} = signupValidate.validate({
+      username,
+      email,
+      password
+   })
 
-   if(!username && !email && !password) {
-      res.status(404).json({
-         message: "Provide all fields"
+   if(error) {
+      return res.status(400).json({
+         message: error.details[0].message
       })
    }
 
+
+   const existingUser = await userModel.findOne({email})
+
+   if(existingUser) {
+      return res.status(400).json({
+         message: `User with ${email} already exists, login instead or create a new account.`
+      })
+   }
+
+   const newUser = await userModel.create({
+      username,
+      email,
+      password
+   })
+
    res.status(201).json({
-      message: "Created"
+      message: "User created",
+      data: newUser
    })
 }
