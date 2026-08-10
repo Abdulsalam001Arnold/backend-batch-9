@@ -2,6 +2,7 @@
 import { userModel } from "../models/userModel.js"
 import { signupValidate, loginValidate } from "../validator/userValidator.js"
 import bcrypt from "bcryptjs"
+import { generateToken } from "../utils/generateToken.js"
 
 export const getHome = (req, res) => {
    res.send("Homepage!")
@@ -42,6 +43,15 @@ export const postUser = async (req, res) => {
          username,
          email,
          password
+      })
+
+      const token = await generateToken(newUser._id)
+
+      res.cookie('token', token, {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === 'production',
+         sameSite: 'lax',
+         maxAge: 1000 * 60 * 60 * 24 * 7
       })
    
       res.status(201).json({
@@ -102,3 +112,45 @@ export const loginUser = async (req, res) => {
       throw new Error(error)
    }
 }
+
+export const signleUser = async (req, res) => {
+   try{
+   const {id} = req.params
+   const user = await userModel.findById(id).select("-password")
+
+   if(!user) {
+      return res.status(404).json({
+         message: `User with id:${id} does not exist.`
+      })
+   }
+
+   return res.status(200).json({
+      message: "User found",
+      data: user
+   })
+
+   }catch(error){
+      console.error(error)
+      throw new Error(error)
+   }
+}
+
+export const deleteUser = async (req, res) => {
+   try {
+      const {id} = req.params
+      const deletedUser = await userModel.findByIdAndDelete(id)
+
+      if(!deletedUser) {
+         return res.status(404).json({
+            message: `User with id:${id} does not exist.`
+         })
+      }
+
+      return res.status(200).json({
+         message: "User deleted",
+      })
+   } catch (error) {
+      console.error(error)
+      throw new Error(error)
+   }
+} 
