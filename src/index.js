@@ -9,8 +9,6 @@ dotenv.config()
 
 const app = express();
 
-const PORT = 3000
-
 app.use(cors({
     origin: "http://localhost:5173",
     credentials: true,
@@ -18,26 +16,28 @@ app.use(cors({
 }))
 app.use(express.json())
 app.use(cookieParser())
-app.use("/api", userRoutes)
-
-const start = async () => {
+// Ensure database is connected before processing API requests in serverless
+app.use(async (req, res, next) => {
     const uri = process.env.MONGODB_URI
     if (!uri || uri.includes("<db_password>")) {
-        console.error("MONGODB_URI is missing or still contains <db_password> placeholder. Update .env and retry.")
-        process.exit(1)
+        console.error("MONGODB_URI is missing or still contains <db_password> placeholder.")
+        return res.status(500).json({ error: "Database configuration error" })
     }
+    
     try {
         await connectDB(uri)
-        console.log("MongoDB connected")
+        console.log("MongoDB connected in middleware")
+        next()
     } catch (err) {
         console.error("MongoDB connection failed:", err.message)
-        process.exit(1)
+        res.status(500).json({ error: "Failed to connect to database" })
     }
-}
+})
 
-start()
+app.use("/api", userRoutes)
 
 if (process.env.NODE_ENV !== "production") {
+    const PORT = process.env.PORT || 3000
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}/api`);
     });
