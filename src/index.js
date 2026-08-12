@@ -37,7 +37,11 @@ const start = async () => {
 
 start()
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}/api`);
-});
+if (process.env.NODE_ENV !== "production") {
+    app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}/api`);
+    });
+}
+
+export default app;
 
