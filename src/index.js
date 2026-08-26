@@ -9,6 +9,8 @@ dotenv.config()
 
 const app = express();
 
+
+
 app.use(cors({
     origin: "http://localhost:5173",
     credentials: true,
@@ -35,6 +37,11 @@ app.use(async (req, res, next) => {
 })
 
 app.use("/api", userRoutes)
+
+app.use((err, req, res, next) => {
+  console.error(err)
+  res.status(500).json({ message: "Something went wrong on our end." })
+})
 
 if (process.env.NODE_ENV !== "production") {
     const PORT = process.env.PORT || 3000

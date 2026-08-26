@@ -3,19 +3,19 @@ import { userModel } from "../models/userModel.js"
 import { signupValidate, loginValidate } from "../validator/userValidator.js"
 import bcrypt from "bcryptjs"
 import { generateToken } from "../utils/generateToken.js"
+import { asyncHandler } from "../utils/asyncHandler.js"
 
-export const getHome = (req, res) => {
+export const getHome = asyncHandler((req, res) => {
    res.send("Homepage!")
-}
+})
 
-export const getAbout = (req, res) => {
+export const getAbout = asyncHandler((req, res) => {
    console.log(req.url, req.method)
    res.send("Aboutpage!")
-}
+})
 
 
-export const postUser = async (req, res) => {
-   try {
+export const postUser = asyncHandler(async (req, res) => {
       const {username, email, password} = req.body
    
       const {error} = signupValidate.validate({
@@ -58,16 +58,10 @@ export const postUser = async (req, res) => {
          message: "User created",
          data: newUser
       })
-      
-   } catch (error) {
-      console.error(error)
-      throw new Error(error)
-   }
-}
+})
 
 
-export const loginUser = async (req, res) => {
-   try {
+export const loginUser = asyncHandler(async (req, res) => {
       const {email, password} = req.body
    
       const {error} = loginValidate.validate({
@@ -106,15 +100,9 @@ export const loginUser = async (req, res) => {
          message: "Login successful.",
          data: refinedUser
       })
-      
-   } catch (error) {
-      console.error(error)
-      throw new Error(error)
-   }
-}
+})
 
-export const signleUser = async (req, res) => {
-   try{
+export const signleUser = asyncHandler(async (req, res) => {
    const {id} = req.params
    const user = await userModel.findById(id).select("-password")
 
@@ -128,15 +116,9 @@ export const signleUser = async (req, res) => {
       message: "User found",
       data: user
    })
+})
 
-   }catch(error){
-      console.error(error)
-      throw new Error(error)
-   }
-}
-
-export const deleteUser = async (req, res) => {
-   try {
+export const deleteUser = asyncHandler(async (req, res) => {
       const {id} = req.params
       const deletedUser = await userModel.findByIdAndDelete(id)
 
@@ -149,8 +131,4 @@ export const deleteUser = async (req, res) => {
       return res.status(200).json({
          message: "User deleted",
       })
-   } catch (error) {
-      console.error(error)
-      throw new Error(error)
-   }
-} 
+})
